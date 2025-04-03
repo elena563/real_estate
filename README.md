@@ -12,11 +12,11 @@ Questo progetto è un'applicazione Web creata utilizzando Streamlit che prevede 
 - Pickle: per il salvataggio e il caricamento dei modelli.
 
 ### Installazione
-**1. Clona il repository**
+**1. Clona il repository**  
 ```git clone https://github.com/elena563/real_estate```
 
 **2. Crea un ambiente virtuale e installa le dipendenze**
 
-**3. Esegui lo script e apri l'interfaccia dell'app**
-```python train_model.py```
+**3. Esegui lo script e apri l'interfaccia dell'app**  
+```python train_model.py```  
 ```streamlit run UI.py```
