@@ -4,46 +4,89 @@ sys.path.append(os.path.abspath('..'))
 import streamlit as st
 import pickle
 import numpy as np
-from src import config
 
 st.set_page_config(
-    page_title="Real Estate Price Prediction",  # Titolo della pagina
-    page_icon="🏠",  # Favicon
+    page_title="Real Estate Price Prediction",  # page title
+    page_icon="🏠",  # favicon
 )
-
 st.markdown("""
     <style>
-        /* Personalizza il titolo */
         h1 {
-            color: #ff0000 !important;
+            color: #ff4b4b !important;
             text-align: center;
+        }
+        .stButton{
+            display: flex;
+            justify-content: center;
+        }
+        .st-emotion-cache-ocsh0s, .st-emotion-cache-ocsh0s:focus, .st-emotion-cache-ocsh0s:focus:not(:active) {
+            background-color: #ff4b4b;
+            border-color: #ff4b4b;
+            color: white;
+            width: 200px;
+        }
+        .st-emotion-cache-ocsh0s:hover{
+            background-color: white;
+            border-color: #ff4b4b;
+            color: #ff4b4b;
+        }
+        .st-emotion-cache-ocsh0s:focus-visible {
+            box-shadow: none;
+        }
+        .st-emotion-cache-1dj3ksd {
+            background-color: #ff4b4b;
+        }
+        .st-emotion-cache-mtjnbi {
+            padding-top: 3rem;
         }
     </style>
 """, unsafe_allow_html=True)
+st.title("How much is worth a house in Taiwan? Find out now!")
+st.text("Enter your real estate details in Sindian, New Taipei, and let a machine learning model predict the price per square meter for you!")
 
-st.title("Real Estate Price Prediction")
+MODELS_PATH = 'linear_regression.pickle'
 
-#model_name = st.selectbox("Select Model",("Random Forest", "Logistic Regression"),)
-#model_path = f"{config.MODELS_PATH}random_forest.pickle" if model_name == "Random Forest" else f"{config.MODELS_PATH}logistic_regression.pickle"
-model_path = f"{config.MODELS_PATH}linear_regression.pickle"
-model_name = "Linear Regression"
-
-if not os.path.exists(model_path):
-    st.error(f"No trained model found for {model_name}. Run the training script first.")
+if not os.path.exists(MODELS_PATH):
+    st.error(f"No trained model found. Run the training script first.")
 else:
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)  
+    with open(MODELS_PATH, "rb") as f:
+        model1 = pickle.load(f)
+        model2 = pickle.load(f)  
 
-user_lat = st.number_input("Insert latitude:")
-user_long = st.number_input("Insert longitude:")
-user_inputs = [user_lat, user_long]
+if "input_option" not in st.session_state:
+    st.session_state.input_option = "coordinates"
+
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("Coordinates"):
+        st.session_state.input_option = "coordinates"
+with col2:
+    if st.button("More Stats"):
+        st.session_state.input_option = "more"
+
+if st.session_state.input_option == "coordinates":
+    st.subheader("Coordinates")
+    lat = st.number_input("At what latitude is it?", value=None, max_value=25.01459, min_value=24.93207, placeholder="Type a value between 24,93 and 25,01")
+    long = st.number_input("At what longitude is it?", value=None, max_value=121.56627, min_value=121.47353, placeholder="Type a value between 121,47 and 121,56")
+    user_inputs = [lat, long]
+    model = model1
+    
+elif st.session_state.input_option == "more":
+    st.subheader("More Stats")
+    age = st.number_input("How old is it?", min_value=0, max_value=100, value=None, placeholder="Type age in years...")
+    dist = st.number_input("At what distance is the nearest MRT station?", min_value=0, value=None, placeholder="Type distance in meters...")
+    stores = st.slider("How many convenience stores are there nearby?", 0, 10)
+    user_inputs = [age, dist, stores]
+    model = model2
+
 
 if st.button("Predict"):
-    if any(field == 0.00 for field in user_inputs):
+    if any(field == None for field in user_inputs):
         st.warning("Please fill in all fields.")
+    elif any(field < 0 for field in user_inputs):
+        st.warning("All variables need to be positive.")
     else:
-        # transform input and predict
         X = np.array([[float(value) for value in user_inputs]])
         prediction = round(model.predict(X)[0], 2)
-        st.success(f"Predicted price: {prediction} €")
+        st.success(f"Predicted price: {prediction} € per m\u00B2")
         
